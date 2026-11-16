@@ -543,6 +543,23 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .footer-brand { display: flex; align-items: center; gap: 8px; color: var(--fk-ink-secondary); font-weight: 600; }
 .footer-brand img { width: 28px; height: 28px; }
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+.footer-links a {
+  color: var(--fk-ink-secondary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.footer-links a:hover,
+.footer-links a[aria-current="page"] {
+  color: var(--fk-primary);
+  text-decoration: underline;
+}
+
 
 @media (min-width: 800px) {
   :root { --pad: 32px; }

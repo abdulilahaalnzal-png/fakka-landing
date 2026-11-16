@@ -1,0 +1,6 @@
+services:
+  - type: web
+    runtime: static
+    name: fakka-landing
+    buildCommand: "true"
+    staticPublishPath: .

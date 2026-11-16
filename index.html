@@ -10,7 +10,7 @@
   <title>فكة — ادّخر فكة كل عملية تلقائيًا</title>
   <link rel="icon" type="image/png" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="css/landing.css?v=20261116v" />
+  <link rel="stylesheet" href="css/landing.css?v=20261116w" />
 </head>
 <body>
   <header class="site-header" id="top">
@@ -25,6 +25,7 @@
         <a href="#screens">الشاشات</a>
         <a href="#trust">الأمان</a>
         <a href="#faq">أسئلة</a>
+        <a href="#waitlist">قائمة الانتظار</a>
       </nav>
       <a class="header-cta" href="https://fakka-prototype.onrender.com/">جرّب التجريبية</a>
       <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-panel" aria-label="القائمة">
@@ -37,6 +38,7 @@
       <a href="#screens">الشاشات</a>
       <a href="#trust">الأمان</a>
       <a href="#faq">أسئلة</a>
+      <a href="#waitlist">قائمة الانتظار</a>
     </nav>
   </header>
 
@@ -237,9 +239,41 @@
           </details>
           <details>
             <summary>متى ينزل التطبيق؟</summary>
-            <div class="ans">التطبيق قريبًا على <span class="ltr">App Store</span> و<span class="ltr">Google Play</span>. وإلى أن ينزل، تقدر تجرّب النسخة التجريبية للتصميم من الزر في أعلى الصفحة.</div>
+            <div class="ans">التطبيق قريبًا على <span class="ltr">App Store</span> و<span class="ltr">Google Play</span>. سجّل في <a href="#waitlist">قائمة الانتظار</a> وبنراسلك عند الإطلاق، أو جرّب النسخة التجريبية من الزر في أعلى الصفحة.</div>
           </details>
         </div>
+      </div>
+    </section>
+    <section class="section alt" id="waitlist">
+      <div class="wrap waitlist-grid">
+        <div>
+          <div class="section-kicker">قبل الإطلاق</div>
+          <h2>سجّل في قائمة الانتظار</h2>
+          <p class="section-lead">خلّنا نعلمك أول ما ينزل التطبيق. الاسم وطريقة التواصل تكفي.</p>
+        </div>
+        <form class="waitlist-card" id="waitlist-form" novalidate>
+          <div class="hp" aria-hidden="true">
+            <label>Company<input type="text" name="company" tabindex="-1" autocomplete="off" /></label>
+          </div>
+          <label class="field">
+            <span>الاسم</span>
+            <input id="wl-name" name="name" type="text" autocomplete="name" maxlength="80" required />
+            <small class="field-error" id="wl-name-error" hidden></small>
+          </label>
+          <label class="field">
+            <span>الجوال أو الإيميل</span>
+            <input id="wl-contact" name="contact" type="text" inputmode="email" autocomplete="email" maxlength="254" required />
+            <small class="field-error" id="wl-contact-error" hidden></small>
+          </label>
+          <label class="consent">
+            <input id="wl-consent" name="consent" type="checkbox" />
+            <span>أوافق على التواصل معي بخصوص إطلاق فكة</span>
+          </label>
+          <small class="field-error" id="wl-consent-error" hidden></small>
+          <p class="waitlist-note">بياناتك تُستخدم فقط للتواصل معك عن موعد الإطلاق.</p>
+          <button class="btn btn-primary waitlist-submit" id="wl-submit" type="submit">سجّلني</button>
+          <p class="form-status" id="wl-status" role="status" hidden></p>
+        </form>
       </div>
     </section>
   </main>
@@ -255,6 +289,109 @@
   </footer>
 
   <script>
+    (function () {
+      var startedAt = Date.now();
+      var form = document.getElementById("waitlist-form");
+      if (form) {
+        var params = new URLSearchParams(window.location.search);
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var name = document.getElementById("wl-name");
+          var contact = document.getElementById("wl-contact");
+          var consent = document.getElementById("wl-consent");
+          var status = document.getElementById("wl-status");
+          var button = document.getElementById("wl-submit");
+          clearError("wl-name-error");
+          clearError("wl-contact-error");
+          clearError("wl-consent-error");
+          status.hidden = true;
+          status.className = "form-status";
+          var nameValue = name.value.trim();
+          var contactValue = contact.value.trim();
+          var ok = true;
+          if ([...nameValue].length < 2) {
+            showError("wl-name-error", "اكتب اسمك (حرفين على الأقل).");
+            ok = false;
+          }
+          if (!looksLikeContact(contactValue)) {
+            showError("wl-contact-error", "أدخل رقم جوال سعودي أو بريدًا صحيحًا.");
+            ok = false;
+          }
+          if (!consent.checked) {
+            showError("wl-consent-error", "يلزم الموافقة حتى نقدر نتواصل معك.");
+            ok = false;
+          }
+          if (!ok) return;
+          button.disabled = true;
+          button.textContent = "جارٍ الإرسال…";
+          fetch("https://fakka-api.onrender.com/v1/waitlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({
+              name: nameValue,
+              contact: contactValue,
+              consent: true,
+              consentText: "أوافق على التواصل معي بخصوص إطلاق فكة",
+              locale: document.documentElement.lang || "ar",
+              source: "landing",
+              utmSource: params.get("utm_source") || undefined,
+              utmMedium: params.get("utm_medium") || undefined,
+              utmCampaign: params.get("utm_campaign") || undefined,
+              utmContent: params.get("utm_content") || undefined,
+              utmTerm: params.get("utm_term") || undefined,
+              company: (form.elements.company && form.elements.company.value) || "",
+              startedAt: startedAt
+            })
+          }).then(function (response) {
+            return response.json().then(function (body) { return { ok: response.ok, status: response.status, body: body }; });
+          }).then(function (result) {
+            if (result.ok && result.body && result.body.alreadyRegistered) {
+              showStatus("هذا التواصل مسجّل من قبل. بنراسلك عند الإطلاق.", "duplicate");
+              return;
+            }
+            if (result.ok) {
+              form.reset();
+              showStatus("تم تسجيلك. بنراسلك لما ينزل التطبيق.", "ok");
+              return;
+            }
+            var code = result.body && result.body.code;
+            if (code === "INVALID_NAME") showError("wl-name-error", "اكتب اسمك (حرفين على الأقل).");
+            else if (code === "INVALID_CONTACT") showError("wl-contact-error", "أدخل رقم جوال سعودي أو بريدًا صحيحًا.");
+            else if (code === "CONSENT_REQUIRED") showError("wl-consent-error", "يلزم الموافقة حتى نقدر نتواصل معك.");
+            else if (code === "TOO_FAST") showStatus("ثواني ونقدر نستلم طلبك.", "err");
+            else if (code === "RATE_LIMITED") showStatus("محاولات كثيرة. حاول بعد قليل.", "err");
+            else showStatus("تعذر الإرسال. تحقق من الاتصال وحاول مرة ثانية.", "err");
+          }).catch(function () {
+            showStatus("تعذر الإرسال. تحقق من الاتصال وحاول مرة ثانية.", "err");
+          }).then(function () {
+            button.disabled = false;
+            button.textContent = "سجّلني";
+          });
+          function showStatus(message, kind) {
+            status.hidden = false;
+            status.textContent = message;
+            status.className = "form-status " + kind;
+          }
+        });
+      }
+      function showError(id, message) {
+        var node = document.getElementById(id);
+        if (!node) return;
+        node.hidden = false;
+        node.textContent = message;
+      }
+      function clearError(id) {
+        var node = document.getElementById(id);
+        if (!node) return;
+        node.hidden = true;
+        node.textContent = "";
+      }
+      function looksLikeContact(value) {
+        if (value.indexOf("@") !== -1) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        var digits = value.replace(/[^\d٠-٩۰-۹+]/g, "");
+        return digits.replace(/\D/g, "").length >= 9;
+      }
+    })();
     (function () {
       var header = document.querySelector(".site-header");
       var btn = document.getElementById("nav-toggle");
